@@ -1,0 +1,9 @@
+#!/usr/bin/awk -f
+
+{
+    if ($0 ~ /__DEBUG/) {
+        print $0
+    } else {
+        print $0 > FILENAME "-d"
+    }
+}
