@@ -153,12 +153,12 @@ public class Functions {
     private static String getBinaryReplacement(int index) {
         if (index >= 1 && index < 129) {
             return Integer.toBinaryString(0b10000000 + (index - 1));
-        } else if (index >= 129 && index < 129 + 16384) {
+        } else if (index >= 129 && index < 129 + 16384) { // I got lazy and I aint calculating this
             return Integer.toBinaryString(0b0100000000000000 + (index - 129));
-        } else if (index >= 129 + 16384 && index < 22097152 + 129 + 16384) {
+        } else if (index >= 129 + 16384 && index < 22097152 + 129 + 16384) { // bear with it 
             return Integer.toBinaryString(0b001000000000000000000000 + (index - (129 + 16384)));
         } else {
-            return Integer.toBinaryString(0b00010000000000000000000000000000 + (index - (22097152 + 129 + 16384)));
+            return Integer.toBinaryString(0b00010000000000000000000000000000 + (index - (22097152 + 129 + 16384))); // :)
         }
     }
 
