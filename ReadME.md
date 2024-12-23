@@ -4,7 +4,7 @@ SpaceGlider is a file compression and decompression tool designed for text files
 
 #
 
-Tested on [enwik9](http://mattmahoney.net/dc/enwik9.zip) with a compression rate of 42.56% (size include dictionnary used).
+Tested on [enwik9](http://mattmahoney.net/dc/enwik9.zip) with a compression rate of 42.56% (size includes dictionnary generated).
 
 #
 
