@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Functions {
+
     public static void createWordDictionary(String fileName, Map<String, Integer> wordCount) {
         char record_separator = 0x1e;
         if (wordCount == null) {
@@ -115,37 +116,50 @@ public class Functions {
         try (BufferedInputStream reader = new BufferedInputStream(new FileInputStream(inputFileName));
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName))) {
             int byteRead;
-            StringBuilder binaryString = new StringBuilder();
             while ((byteRead = reader.read()) != -1) {
-                binaryString.append(String.format("%8s", Integer.toBinaryString(byteRead & 0xFF)).replace(' ', '0'));
-                while (binaryString.length() >= 8) {
-                    int index = getIndexFromBinaryString(binaryString);
-                    if (index != -1) {
-                        writer.write(dictMap.getOrDefault(index, ""));
-                        writer.write(' ');
-                    }
+                if (byteRead == '\n') {
+                    writer.newLine();
+                    continue;
                 }
+                int numBytes = getNumBytes(byteRead);
+                byte[] byteSet = new byte[numBytes];
+                byteSet[0] = (byte) byteRead;
+                for (int i = 1; i < numBytes; i++) {
+                    byteSet[i] = (byte) reader.read();
+                }
+                int index = getIndexFromByteSet(byteSet);
+                String word = dictMap.getOrDefault(index, "");
+                writer.write(word);
+                writer.write(' ');
             }
+            writer.newLine(); // Ensure the last line ends with a newline
         } catch (IOException e) {
             throw new RuntimeException("Error processing input file: " + inputFileName, e);
         }
     }
 
-    private static int getIndexFromBinaryString(StringBuilder binaryString) {
-        if (binaryString.length() < 8) return -1;
-        int index = -1;
-        if (binaryString.charAt(0) == '1') {
-            index = Integer.parseInt(binaryString.substring(1, 8), 2) + 1;
-            binaryString.delete(0, 8);
-        } else if (binaryString.length() >= 15 && binaryString.charAt(1) == '1') {
-            index = Integer.parseInt(binaryString.substring(2, 15), 2) + 129;
-            binaryString.delete(0, 15);
-        } else if (binaryString.length() >= 23 && binaryString.charAt(2) == '1') {
-            index = Integer.parseInt(binaryString.substring(3, 23), 2) + 129 + 16384;
-            binaryString.delete(0, 23);
-        } else if (binaryString.length() >= 32 && binaryString.charAt(3) == '1') {
-            index = Integer.parseInt(binaryString.substring(4, 32), 2) + 22097152 + 129 + 16384;
-            binaryString.delete(0, 32);
+    private static int getNumBytes(int firstByte) {
+        if ((firstByte & 0b10000000) != 0) {
+            return 1;
+        } else if ((firstByte & 0b01000000) != 0) {
+            return 2;
+        } else if ((firstByte & 0b00100000) != 0) {
+            return 3;
+        } else {
+            return 4;
+        }
+    }
+
+    private static int getIndexFromByteSet(byte[] byteSet) {
+        int index = 0;
+        if (byteSet.length == 1) {
+            index = (byteSet[0] & 0b01111111) + 1;
+        } else if (byteSet.length == 2) {
+            index = ((byteSet[0] & 0b00111111) << 8) | (byteSet[1] & 0xFF) + 129;
+        } else if (byteSet.length == 3) {
+            index = ((byteSet[0] & 0b00011111) << 16) | ((byteSet[1] & 0xFF) << 8) | (byteSet[2] & 0xFF) + 129 + 16384;
+        } else if (byteSet.length == 4) {
+            index = ((byteSet[0] & 0b00001111) << 24) | ((byteSet[1] & 0xFF) << 16) | ((byteSet[2] & 0xFF) << 8) | (byteSet[3] & 0xFF) + 22097152 + 129 + 16384;
         }
         return index;
     }
@@ -153,12 +167,12 @@ public class Functions {
     private static String getBinaryReplacement(int index) {
         if (index >= 1 && index < 129) {
             return Integer.toBinaryString(0b10000000 + (index - 1));
-        } else if (index >= 129 && index < 129 + 16384) { // I got lazy and I aint calculating this
+        } else if (index >= 129 && index < 129 + 16384) {
             return Integer.toBinaryString(0b0100000000000000 + (index - 129));
-        } else if (index >= 129 + 16384 && index < 22097152 + 129 + 16384) { // bear with it 
+        } else if (index >= 129 + 16384 && index < 22097152 + 129 + 16384) {
             return Integer.toBinaryString(0b001000000000000000000000 + (index - (129 + 16384)));
         } else {
-            return Integer.toBinaryString(0b00010000000000000000000000000000 + (index - (22097152 + 129 + 16384))); // :)
+            return Integer.toBinaryString(0b00010000000000000000000000000000 + (index - (22097152 + 129 + 16384)));
         }
     }
 
@@ -190,4 +204,5 @@ public class Functions {
             throw new RuntimeException("Error handling file: " + file.getName(), e);
         }
     }
+
 }
