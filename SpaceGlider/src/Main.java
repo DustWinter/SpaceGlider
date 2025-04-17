@@ -11,4 +11,4 @@ public class Main {
         Functions.revertCompressedFile("compressedfile", path+"_dict.dictsrt", "decompressedfile");
     }
 }
-// edit :)
+// another edit :)
